@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  password_hash String
+  role          Role         @default(STUDENT)
+  submissions   Submission[]
+}
+
+model Exam {
+  id                      String       @id @default(cuid())
+  title                   String
+  pdf_file_url            String
+  question_page_end       Int
+  total_questions         Int
+  marks_correct           Float
+  marks_negative          Float
+  exam_release_time       DateTime
+  answer_key_release_time DateTime
+  answer_key              Json         // mapping e.g. {"1": "A", "2": "C"}
+  submissions             Submission[]
+}
+
+model Submission {
+  id                String   @id @default(cuid())
+  student_id        String
+  exam_id           String
+  submitted_answers Json     // mapping e.g. {"1": "A", "2": "C"}
+  score             Float
+  submitted_at      DateTime @default(now())
+
+  student           User     @relation(fields: [student_id], references: [id])
+  exam              Exam     @relation(fields: [exam_id], references: [id])
+}
