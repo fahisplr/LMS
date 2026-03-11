@@ -4,14 +4,16 @@ import { PDFDocument } from "pdf-lib"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
   const session = await getServerSession(authOptions)
   if (!session?.user) {
     return new NextResponse("Unauthorized", { status: 401 })
   }
 
   const exam = await prisma.exam.findUnique({
-    where: { id: params.id }
+    where: { id }
   })
 
   if (!exam) return new NextResponse("Not Found", { status: 404 })
@@ -44,7 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     copiedPages.forEach((page) => newPdf.addPage(page))
 
     const pdfBytes = await newPdf.save()
-    return new NextResponse(pdfBytes, {
+    return new NextResponse(pdfBytes as any, {
       headers: { 
         "Content-Type": "application/pdf",
         "Cache-Control": "no-store, max-age=0"

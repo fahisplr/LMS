@@ -6,14 +6,16 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import AnswerSheet from "./AnswerSheet"
 
-export default async function ExamViewerPage({ params }: { params: { id: string } }) {
+export default async function ExamViewerPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
   const session = await getServerSession(authOptions)
   const student_id = session?.user?.id
 
   if (!student_id) return redirect("/login")
 
   const exam = await prisma.exam.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       submissions: {
         where: { student_id }
